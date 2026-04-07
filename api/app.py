@@ -1,21 +1,28 @@
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+
 from fastapi import FastAPI
-import pickle
 import pandas as pd
 
-app = FastAPI()
+from src.predict import predict_engagement
+from src.reason_engine import generate_reason
+from src.suggestion_engine import generate_suggestion
 
-# Load model
-with open("models/model.pkl", "rb") as f:
-    model = pickle.load(f)
+app = FastAPI()
 
 
 @app.get("/")
 def home():
-    return {"message": "User Engagement Prediction API"}
+    return {"message": "User Engagement Intelligence API 🚀"}
 
 
 @app.post("/predict")
 def predict(data: dict):
+
+    #Ensuring correct feature order
     df = pd.DataFrame([data])
 
     df = df[[
@@ -30,7 +37,19 @@ def predict(data: dict):
         "day_of_week"
     ]]
 
-    prediction = model.predict(df)
+    #Step 1: Prediction → Score
+    score, engaged = predict_engagement(df)
 
-    return {"engaged": int(prediction[0])}
-    
+    #Step 2: Reason generation
+    reason = generate_reason(data)
+
+    #Step 3: Suggestion generation
+    suggestion = generate_suggestion(data, score)
+
+    #Final response
+    return {
+        "engagement_score": score,
+        "engaged": engaged,
+        "reason": reason,
+        "suggestion": suggestion
+    }

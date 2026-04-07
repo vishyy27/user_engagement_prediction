@@ -1,12 +1,13 @@
 import pickle
-import pandas as pd
 
-def load_model():
-    with open("../models/model.pkl", "rb") as f:
-        return pickle.load(f)
+#Loading once
+with open("models/model.pkl", "rb") as f:
+    model = pickle.load(f)
 
-def predict(data: dict):
-    model = load_model()
-    df = pd.DataFrame([data])
-    prediction = model.predict(df)[0]
-    return int(prediction)
+
+def predict_engagement(df):
+    proba = model.predict_proba(df)[0][1]
+    score = int(proba * 100)
+    engaged = 1 if score >= 50 else 0
+
+    return score, engaged
