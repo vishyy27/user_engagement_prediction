@@ -1,15 +1,13 @@
 import joblib
 import pandas as pd
 
-model = joblib.load("models/engagement_model.pkl")
+model = joblib.load("models/model.pkl")
 
-def predict_user(data: dict):
-    df = pd.DataFrame([data])
+def predict(df):
 
     prediction = model.predict(df)[0]
     probability = model.predict_proba(df)[0][1]
 
-    return {
-        "prediction": int(prediction),
-        "probability": float(probability)
-    }
+    score = int(probability * 100)
+
+    return score, int(prediction)

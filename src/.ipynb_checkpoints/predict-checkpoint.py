@@ -1,13 +1,13 @@
-import pickle
+import joblib
+import pandas as pd
 
-#Loading once
-with open("models/model.pkl", "rb") as f:
-    model = pickle.load(f)
+model = joblib.load("models/model.pkl")
 
+def predict(df):
 
-def predict_engagement(df):
-    proba = model.predict_proba(df)[0][1]
-    score = int(proba * 100)
-    engaged = 1 if score >= 50 else 0
+    prediction = model.predict(df)[0]
+    probability = model.predict_proba(df)[0][1]
 
-    return score, engaged
+    score = int(probability * 100)
+
+    return score, int(prediction)

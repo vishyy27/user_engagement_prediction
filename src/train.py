@@ -51,4 +51,4 @@ pipeline.fit(X_train, y_train)
 with open("../models/model.pkl", "wb") as f:
     pickle.dump(pipeline, f)
 
-print("✅ Model trained and saved!")
+print("Model trained and saved!")

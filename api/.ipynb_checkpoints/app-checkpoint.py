@@ -1,55 +1,41 @@
-import sys
-import os
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-
 from fastapi import FastAPI
-import pandas as pd
-
-from src.predict import predict_engagement
-from src.reason_engine import generate_reason
-from src.suggestion_engine import generate_suggestion
+from api.schema import PredictionRequest, FeedbackRequest
+from services.prediction_service import predict_user
+from services.user_service import create_user
+from services.feedback_service import store_feedback
 
 app = FastAPI()
 
-
 @app.get("/")
 def home():
-    return {"message": "User Engagement Intelligence API 🚀"}
+    return {"message": "User Engagement Intelligence API"}
 
 
 @app.post("/predict")
-def predict(data: dict):
+def predict(data: PredictionRequest):
 
-    #Ensuring correct feature order
-    df = pd.DataFrame([data])
+    data = data.dict()
 
-    df = df[[
-        "age",
-        "daily_active_time",
-        "posts_last_week",
-        "likes_last_week",
-        "activity_type",
-        "past_participation_rate",
-        "friends_participating",
-        "time_of_day",
-        "day_of_week"
-    ]]
+    user_id = data.get("user_id")
 
-    #Step 1: Prediction → Score
-    score, engaged = predict_engagement(df)
+    #Ensuring user exists
+    create_user(user_id)
 
-    #Step 2: Reason generation
-    reason = generate_reason(data)
+    #Running full pipeline
+    result = predict_user(data)
 
-    #Step 3: Suggestion generation
-    suggestion = generate_suggestion(data, score)
+    return result
 
-    #Final response
-    return {
-        "engagement_score": score,
-        "engaged": engaged,
-        "reason": reason,
-        "suggestion": suggestion
-    }
+
+@app.post("/feedback")
+def feedback(data: FeedbackRequest):
+
+    data = data.dict()  
+
+    store_feedback(
+        data["user_id"],
+        data["action"],
+        data["success"]
+    )
+
+    return {"message": "Feedback stored successfully"}
