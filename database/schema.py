@@ -33,12 +33,13 @@ def create_tables():
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
+
+    #User Profile table
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS user_profile (
         user_id TEXT PRIMARY KEY,
-        avg_engagement_score REAL,
-        total_predictions INTEGER,
-        last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        last_score REAL,
+        total_predictions INTEGER DEFAULT 0
     )
     """)
 

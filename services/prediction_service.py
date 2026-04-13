@@ -1,4 +1,5 @@
 from src.predict import predict
+from services.user_service import update_user_profile
 from src.reason_engine import generate_reason
 from src.suggestion_engine import generate_suggestion
 from database.db import get_connection
@@ -7,11 +8,11 @@ import pandas as pd
 def predict_user(data):
     user_id = data.get("user_id")
 
-    # 🔥 REMOVE user_id before model
+    #REMOVING user_id before model
     data_copy = data.copy()
     data_copy.pop("user_id", None)
 
-    # Convert to DataFrame
+    #Converting to DataFrame
     df = pd.DataFrame([data_copy])
 
     df = df[[
@@ -26,14 +27,15 @@ def predict_user(data):
         "day_of_week"
     ]]
 
-    # Prediction
+    #Prediction
     score, engaged = predict(df)
+    update_user_profile(user_id, score)
 
-    # Reasoning & Suggestion
+    #Reasoning & Suggestion
     reason = generate_reason(data)
     suggestion = generate_suggestion(data, score)
 
-    # Store in DB
+    #Storing in DB
     conn = get_connection()
     cursor = conn.cursor()
 
