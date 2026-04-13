@@ -38,8 +38,10 @@ def create_tables():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS user_profile (
         user_id TEXT PRIMARY KEY,
+        avg_engagement_score REAL,
+        total_predictions INTEGER,
         last_score REAL,
-        total_predictions INTEGER DEFAULT 0
+        last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
 

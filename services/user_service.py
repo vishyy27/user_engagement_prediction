@@ -14,31 +14,35 @@ def create_user(user_id):
     conn.close()
 
 
-def update_user_profile(user_id, score):
+def update_user_profile(user_id, new_score):
     conn = get_connection()
     cursor = conn.cursor()
 
-    #Checking if user exists in user_profile
-    cursor.execute(
-        "SELECT total_predictions FROM user_profile WHERE user_id = ?",
-        (user_id,)
-    )
+    cursor.execute("""
+    SELECT avg_engagement_score, total_predictions 
+    FROM user_profile 
+    WHERE user_id = ?
+    """, (user_id,))
+    
     row = cursor.fetchone()
 
     if row:
-        total_predictions = row[0] + 1
+        avg_score, total = row
+
+        total += 1
+        new_avg = ((avg_score * (total - 1)) + new_score) / total
 
         cursor.execute("""
         UPDATE user_profile
-        SET last_score = ?, total_predictions = ?
+        SET avg_engagement_score = ?, total_predictions = ?, last_score = ?, last_active = CURRENT_TIMESTAMP
         WHERE user_id = ?
-        """, (float(score), total_predictions, user_id))
+        """, (new_avg, total, new_score, user_id))
 
     else:
         cursor.execute("""
-        INSERT INTO user_profile (user_id, last_score, total_predictions)
-        VALUES (?, ?, ?)
-        """, (user_id, float(score), 1))
+        INSERT INTO user_profile (user_id, avg_engagement_score, total_predictions, last_score)
+        VALUES (?, ?, ?, ?)
+        """, (user_id, new_score, 1, new_score))
 
     conn.commit()
     conn.close()
