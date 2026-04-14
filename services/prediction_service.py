@@ -1,7 +1,7 @@
 from src.predict import predict
 from services.user_service import update_user_profile
 from src.reason_engine import generate_reason
-from src.suggestion_engine import generate_suggestion
+from services.suggestion_service import generate_suggestion
 from database.db import get_connection
 import pandas as pd
 
@@ -33,7 +33,7 @@ def predict_user(data):
 
     #Reasoning & Suggestion
     reason = generate_reason(data)
-    suggestion = generate_suggestion(data, score)
+    suggestion = generate_suggestion(data, score, user_id)
 
     #Storing in DB
     conn = get_connection()
