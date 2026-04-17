@@ -1,8 +1,7 @@
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, Float, String, Text, TIMESTAMP
+from sqlalchemy import Column, Integer, Float, String, Text, TIMESTAMP, JSON
 from sqlalchemy.sql import func
+from database.db import Base
 
-Base = declarative_base()
 
 #Users Table
 class User(Base):
@@ -43,3 +42,13 @@ class UserProfile(Base):
     total_predictions = Column(Integer)
     last_score = Column(Float)
     last_active = Column(TIMESTAMP, server_default=func.now())
+
+
+# Event Log Table
+class EventLog(Base):
+    __tablename__ = "events"
+
+    id = Column(Integer, primary_key=True)
+    event_type = Column(String)
+    user_id = Column(String)
+    data = Column(JSON)
