@@ -1,44 +1,29 @@
 from database.db import get_connection
+from database.models import UserProfile
 
+def update_user_profile(user_id, new_score):
+    db = get_connection()
 
-def create_user(user_id):
-    conn = get_connection()
-    cursor = conn.cursor()
+    user = db.query(UserProfile).filter(
+        UserProfile.user_id == user_id
+    ).first()
 
-    cursor.execute("""
-    INSERT OR IGNORE INTO users (user_id)
-    VALUES (?)
-    """, (user_id,))
-
-    conn.commit()
-    conn.close()
-
-
-def update_user_profile(user_id, score):
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    #Checking if user exists in user_profile
-    cursor.execute(
-        "SELECT total_predictions FROM user_profile WHERE user_id = ?",
-        (user_id,)
-    )
-    row = cursor.fetchone()
-
-    if row:
-        total_predictions = row[0] + 1
-
-        cursor.execute("""
-        UPDATE user_profile
-        SET last_score = ?, total_predictions = ?
-        WHERE user_id = ?
-        """, (float(score), total_predictions, user_id))
+    if not user:
+        user = UserProfile(
+            user_id=user_id,
+            avg_engagement_score=new_score,
+            total_predictions=1,
+            last_score=new_score
+        )
+        db.add(user)
 
     else:
-        cursor.execute("""
-        INSERT INTO user_profile (user_id, last_score, total_predictions)
-        VALUES (?, ?, ?)
-        """, (user_id, float(score), 1))
+        total = user.total_predictions + 1
+        avg = ((user.avg_engagement_score * user.total_predictions) + new_score) / total
 
-    conn.commit()
-    conn.close()
+        user.avg_engagement_score = avg
+        user.total_predictions = total
+        user.last_score = new_score
+
+    db.commit()
+    db.close()

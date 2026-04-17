@@ -1,5 +1,4 @@
 import joblib
-import pandas as pd
 
 model = joblib.load("models/model.pkl")
 

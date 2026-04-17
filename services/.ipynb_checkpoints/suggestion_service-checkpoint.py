@@ -1,18 +1,20 @@
 from database.db import get_connection
+from database.models import UserProfile
 
 def get_user_profile(user_id):
-    conn = get_connection()
-    cursor = conn.cursor()
+    db = get_connection()
 
-    cursor.execute("""
-    SELECT avg_engagement_score, total_predictions 
-    FROM user_profile 
-    WHERE user_id = ?
-    """, (user_id,))
+    user = db.query(UserProfile).filter(
+        UserProfile.user_id == user_id
+    ).first()
 
-    row = cursor.fetchone()
-    conn.close()
-    return row
+    db.close()
+
+    if not user:
+        return None
+
+    return user.avg_engagement_score, user.total_predictions
+
 
 def generate_suggestion(data, score, user_id):
     suggestions = []
@@ -24,7 +26,7 @@ def generate_suggestion(data, score, user_id):
     if data["posts_last_week"] < 2:
         suggestions.append("Encourage content creation with prompts or rewards")
 
-    #New adaptive logic
+    #Adaptive logic
     profile = get_user_profile(user_id)
 
     if profile:
@@ -35,5 +37,8 @@ def generate_suggestion(data, score, user_id):
 
         if total is not None and total > 5:
             suggestions.append("Long-term user → use rewards or gamification strategies")
+
+        if not suggestions:
+            suggestions.append("Maintain current engagement strategy — user is performing well")
 
     return " | ".join(suggestions)

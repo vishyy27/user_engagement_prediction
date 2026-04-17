@@ -3,16 +3,15 @@ from services.user_service import update_user_profile
 from src.reason_engine import generate_reason
 from services.suggestion_service import generate_suggestion
 from database.db import get_connection
+from database.models import Prediction
 import pandas as pd
 
 def predict_user(data):
     user_id = data.get("user_id")
 
-    #REMOVING user_id before model
     data_copy = data.copy()
     data_copy.pop("user_id", None)
 
-    #Converting to DataFrame
     df = pd.DataFrame([data_copy])
 
     df = df[[
@@ -27,25 +26,24 @@ def predict_user(data):
         "day_of_week"
     ]]
 
-    #Prediction
     score, engaged = predict(df)
+
     update_user_profile(user_id, score)
 
-    #Reasoning & Suggestion
     reason = generate_reason(data)
     suggestion = generate_suggestion(data, score, user_id)
 
-    #Storing in DB
-    conn = get_connection()
-    cursor = conn.cursor()
+    db = get_connection()
 
-    cursor.execute("""
-    INSERT INTO predictions (user_id, score, prediction)
-    VALUES (?, ?, ?)
-    """, (user_id, int(score), int(engaged)))
+    new_prediction = Prediction(
+        user_id=user_id,
+        score=int(score),
+        prediction=int(engaged)
+    )
 
-    conn.commit()
-    conn.close()
+    db.add(new_prediction)
+    db.commit()
+    db.close()
 
     return {
         "user_id": user_id,
