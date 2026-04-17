@@ -24,11 +24,17 @@ def get_user_features(user_id):
 def update_user_features(user_id, new_score):
     db = get_connection()
 
+    print("Updating user:", user_id)
+
     user = db.query(UserProfile).filter(
         UserProfile.user_id == user_id
     ).first()
 
+    print("Found user:", user)
+
     if not user:
+        print("Creating new user")
+
         user = UserProfile(
             user_id=user_id,
             avg_engagement_score=new_score,
@@ -38,13 +44,14 @@ def update_user_features(user_id, new_score):
         db.add(user)
 
     else:
-        user.total_predictions += 1
-        user.last_score = new_score
+        print("Updating existing user")
 
-        user.avg_engagement_score = (
-            (user.avg_engagement_score * (user.total_predictions - 1) + new_score)
-            / user.total_predictions
-        )
+        total = user.total_predictions + 1
+        avg = ((user.avg_engagement_score * user.total_predictions) + new_score) / total
+
+        user.avg_engagement_score = avg
+        user.total_predictions = total
+        user.last_score = new_score
 
     db.commit()
     db.close()
