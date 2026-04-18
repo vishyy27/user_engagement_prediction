@@ -1,6 +1,8 @@
 from database.db import get_connection
 from database.models import UserProfile
+from services.rl_engine import choose_action
 
+#Get user profile
 def get_user_profile(user_id):
     db = get_connection()
 
@@ -15,30 +17,53 @@ def get_user_profile(user_id):
 
     return user.avg_engagement_score, user.total_predictions
 
-
-def generate_suggestion(data, score, user_id):
+#Main logic
+def generate_suggestion(data, score, user_id, segment=None):
     suggestions = []
 
-    #Existing rule-based logic
-    if data["daily_active_time"] < 30:
+    #Fallback
+    if data.get("daily_active_time", 0) < 30:
         suggestions.append("Send personalized notifications to increase app usage")
 
-    if data["posts_last_week"] < 2:
+    if data.get("posts_last_week", 0) < 2:
         suggestions.append("Encourage content creation with prompts or rewards")
 
-    #Adaptive logic
+    if data.get("likes_last_week", 0) < 5:
+        suggestions.append("Show more engaging content to boost interaction")
+
+    #User Profile Logic
     profile = get_user_profile(user_id)
 
     if profile:
         avg_score, total = profile
 
         if avg_score is not None and avg_score < 30:
-            suggestions.append("User consistently low engagement → trigger re-engagement campaign")
+            suggestions.append("User has consistently low engagement → trigger re-engagement campaign")
 
         if total is not None and total > 5:
-            suggestions.append("Long-term user → use rewards or gamification strategies")
+            suggestions.append("Loyal user → use rewards or gamification strategies")
 
-        if not suggestions:
-            suggestions.append("Maintain current engagement strategy — user is performing well")
+    #RL Based Decision
+    rl_suggestion = None
 
-    return " | ".join(suggestions)
+    if segment:
+        action = choose_action(segment)
+
+        action_map = {
+            "Send Notification": "Send a targeted push notification at optimal time",
+            "Recommend Content": "Recommend personalized content based on interests",
+            "Offer Discount": "Provide limited-time incentives to boost engagement",
+            "Trigger Email": "Send a re-engagement email campaign"
+        }
+
+        rl_suggestion = action_map.get(action)
+
+    #Priority
+    if rl_suggestion:
+        return rl_suggestion
+
+    #Fallback
+    if suggestions:
+        return " | ".join(suggestions)
+
+    return "Maintain engagement with personalized content and timely notifications"
