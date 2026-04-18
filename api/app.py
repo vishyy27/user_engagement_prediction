@@ -30,12 +30,8 @@ def predict(data: PredictionRequest):
 @app.post("/feedback")
 def feedback(data: FeedbackRequest):
 
-    data = data.dict()  
+    data = data.dict()
 
-    store_feedback(
-        data["user_id"],
-        data["action"],
-        data["success"]
-    )
+    store_feedback(data)
 
     return {"message": "Feedback stored successfully"}

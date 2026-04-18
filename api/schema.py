@@ -16,4 +16,5 @@ class PredictionRequest(BaseModel):
 class FeedbackRequest(BaseModel):
     user_id: str
     action: str
-    success: bool
+    reward: int   #1 (success) or 0 (failure)
+    segment: str
