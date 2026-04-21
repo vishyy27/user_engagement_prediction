@@ -1,4 +1,5 @@
-from database.schema import create_tables
+from database.db import Base, engine
+import database.models
 
-create_tables()
-print("Database created successfully!")
+Base.metadata.create_all(bind=engine)
+print("Database tables created")
